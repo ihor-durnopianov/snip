@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A simple tool to help with snippets.
 
+Expects (not yet, but anyway) SNIPPETS_PATH to be a git repo.
+
 Usage:
     snip add lang prefix
 """
@@ -29,6 +31,9 @@ def main():
 
 
 class _Parser(argparse.ArgumentParser):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, description=__doc__)
 
     def specify_args(self):
         subparsers = self.add_subparsers(dest="command")
@@ -78,8 +83,8 @@ def _save_snippet(snippet, dest):
 def _make_snippet(lang, prefix):
     return {
         _make_random_name(): {
-            "prefix": prefix,
-            "body": [line for line in _request_body().splitlines()],
+            "prefix": f"s-{prefix}",
+            "body": _request_body().splitlines(),
             "description": ""
         }
     }
