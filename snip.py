@@ -40,10 +40,9 @@ class _Parser(argparse.ArgumentParser):
         add = subparsers.add_parser("add")
         add.add_argument("lang")
         add.add_argument("prefix")
-        # add.add_argument("prefix", nargs='?', default=None)
-        # add.add_argument(
-        #     "-r", "--review", help="help", action="store_true"
-        # )
+        add.add_argument("-n", "--name", default=None)
+        add.add_argument("-d", "--description", default="")
+        add.add_argument("-s", "--skip-review", action="store_true")
         # add.add_argument(
         #     "-e", "--edit-msg", help="help", action="store_true"
         # )
@@ -60,14 +59,15 @@ def _assemble_commands():
     }
 
 
-def _add(lang, prefix, **kwargs):
-    snippet = _make_snippet(lang, prefix)
+def _add(lang, prefix, name, description, skip_review, **kwargs):
+    snippet = _make_snippet(lang, prefix, name, description)
     if snippet is None:
         print("dismissing empty snippet...")
         return
-    if True:
-        reviewed = _review_snippet(snippet)
-        if reviewed is None:
+    to_review = not skip_review and name is None or description == ""
+    if to_review:
+        snippet = _review_snippet(snippet)
+        if snippet is None:
             print("dismissing snippet due to emptied message")
             return
     dest = SNIPPETS_PATH / f"{lang}.json"
@@ -77,7 +77,7 @@ def _add(lang, prefix, **kwargs):
             return
         with open(dest, "w") as file:
             json.dump({}, file)
-    _save_snippet(reviewed, dest)
+    _save_snippet(snippet, dest)
 
 
 def _save_snippet(snippet, dest):
@@ -88,15 +88,17 @@ def _save_snippet(snippet, dest):
         json.dump(snippets | snippet, file, indent=4)
 
 
-def _make_snippet(lang, prefix):
+def _make_snippet(lang, prefix, name, description):
     body = _request_body().splitlines()
     if not body:
         return None
+    if name is None:
+        name = _make_random_name()
     return {
-        _make_random_name(): {
+        name: {
             "prefix": f"s-{prefix}",
             "body": body,
-            "description": ""
+            "description": description
         }
     }
 
