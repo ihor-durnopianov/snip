@@ -10,6 +10,11 @@ How do I modify the existing snippet?  Paste - modify - "snippetize" - replace? 
 How do I see my snippets?  A bit easier if they are one-liners - just open python.json or whatever  
 How do I group my snippets?  You don't
 
+## Trace
+
+cd ~/.config/Code/User/snippets  
+-> git init && git add . && git commit -m "Init"
+
 ## Usage
 
 Smth along the lines of
