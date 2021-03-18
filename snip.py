@@ -40,6 +40,7 @@ class _Parser(argparse.ArgumentParser):
         add = subparsers.add_parser("add")
         add.add_argument("lang")
         add.add_argument("prefix")
+        # add.add_argument("prefix", nargs='?', default=None)
         # add.add_argument(
         #     "-r", "--review", help="help", action="store_true"
         # )
@@ -61,11 +62,18 @@ def _assemble_commands():
 
 def _add(lang, prefix, **kwargs):
     snippet = _make_snippet(lang, prefix)
+    if snippet is None:
+        print("dismissing empty snippet...")
+        return
     if True:
         reviewed = _review_snippet(snippet)
+        if reviewed is None:
+            print("dismissing snippet due to emptied message")
+            return
     dest = SNIPPETS_PATH / f"{lang}.json"
     if not dest.exists():
         if input(f"{dest} does not exist.  Create? (y/n) ") != "y":
+            print("not created, dismissing the snippet...")
             return
         with open(dest, "w") as file:
             json.dump({}, file)
@@ -81,10 +89,13 @@ def _save_snippet(snippet, dest):
 
 
 def _make_snippet(lang, prefix):
+    body = _request_body().splitlines()
+    if not body:
+        return None
     return {
         _make_random_name(): {
             "prefix": f"s-{prefix}",
-            "body": _request_body().splitlines(),
+            "body": body,
             "description": ""
         }
     }
@@ -105,14 +116,18 @@ def _review_snippet(snippet):
         json.dump(snippet, file, indent=4)
     os.system(f"nano {name}")
     with open(name) as file:
-        snippet = json.load(file)
+        contents = file.read()
+        if not contents:
+            snippet = None
+        else:
+            snippet = json.loads(contents)
     os.unlink(name)
     return snippet
 
 
 def _make_random_name():
     return "".join(
-        random.choices(string.ascii_lowercase + string.digits, k=16)
+        random.choices(string.ascii_uppercase + string.digits, k=16)
     )
 
 
