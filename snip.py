@@ -2,9 +2,6 @@
 """A simple tool to help with snippets.
 
 Expects (not yet, but anyway) SNIPPETS_PATH to be a git repo.
-
-Usage:
-    snip add lang prefix
 """
 
 
@@ -60,23 +57,23 @@ def _assemble_commands():
 
 
 def _add(lang, prefix, name, description, skip_review, **kwargs):
+    dest = SNIPPETS_PATH / f"{lang}.json"
+    if not dest.exists():
+        if input(f"{dest} does not exist.  Create? (y/n) ") != "y":
+            print("not created, aborting...")
+            return
+        with open(dest, "w") as file:
+            json.dump({}, file)
     snippet = _make_snippet(lang, prefix, name, description)
     if snippet is None:
         print("dismissing empty snippet...")
         return
-    to_review = not skip_review and name is None or description == ""
+    to_review = not skip_review and (name is None or description == "")
     if to_review:
         snippet = _review_snippet(snippet)
         if snippet is None:
             print("dismissing snippet due to emptied message")
             return
-    dest = SNIPPETS_PATH / f"{lang}.json"
-    if not dest.exists():
-        if input(f"{dest} does not exist.  Create? (y/n) ") != "y":
-            print("not created, dismissing the snippet...")
-            return
-        with open(dest, "w") as file:
-            json.dump({}, file)
     _save_snippet(snippet, dest)
 
 
