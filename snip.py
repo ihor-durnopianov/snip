@@ -77,7 +77,8 @@ def _init(**kwargs):
         print(f"{CONFIG} exists, modify manually if needed")
         return
     config = dict(
-        snippets=input("specify VS Code snippets folder: ")
+        snippets=input("specify VS Code snippets folder: "),
+        editor=input("specify editor: "),
     )
     with open(CONFIG, "w") as file:
         json.dump(config, file, indent=4)
@@ -91,13 +92,16 @@ def _add(lang, prefix, name, description, skip_review, config, **kwargs):
             return
         with open(dest, "w") as file:
             json.dump({}, file)
-    snippet = _make_snippet(lang, prefix, name, description)
+    # TODO: make either config global
+    #       , or _add and co. be the methods of the class
+    # , s.t. one is not forced to pass editor as a function parameter
+    snippet = _make_snippet(lang, prefix, name, description, config.editor)
     if snippet is None:
         print("dismissing empty snippet...")
         return
     to_review = not skip_review and (name is None or description == "")
     if to_review:
-        snippet = _review_snippet(snippet)
+        snippet = _review_snippet(snippet, config.editor)
         if snippet is None:
             print("dismissing snippet due to emptied message")
             return
@@ -113,8 +117,8 @@ def _save_snippet(snippet, dest):
         json.dump(snippets | snippet, file, indent=4)
 
 
-def _make_snippet(lang, prefix, name, description):
-    body = _request_body().splitlines()
+def _make_snippet(lang, prefix, name, description, editor):
+    body = _request_body(editor).splitlines()
     if not body:
         return None
     if name is None:
@@ -128,20 +132,20 @@ def _make_snippet(lang, prefix, name, description):
     }
 
 
-def _request_body():
+def _request_body(editor):
     _, name = tempfile.mkstemp()
-    os.system(f"nano {name}")
+    os.system(f"{editor} {name}")
     with open(name) as file:
         body = file.read()
     os.unlink(name)
     return body
 
 
-def _review_snippet(snippet):
+def _review_snippet(snippet, editor):
     _, name = tempfile.mkstemp()
     with open(name, "w") as file:
         json.dump(snippet, file, indent=4)
-    os.system(f"nano {name}")
+    os.system(f"{editor} {name}")
     with open(name) as file:
         contents = file.read()
         if not contents:
