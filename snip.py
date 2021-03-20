@@ -38,28 +38,22 @@ def _read_config():
 class _Parser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, description=__doc__)
+        kwargs.setdefault("description", __doc__)
+        super().__init__(*args, **kwargs)
 
     def specify_args(self):
         subparsers = self.add_subparsers(dest="command")
-        # TODO: add command-level help
-        add = subparsers.add_parser("add"
-            # , description=(
-            #     "Add new snippet "
-            #     "(or override the one with the same name"
-            # )
-        )
+        add = subparsers.add_parser("add", description=(
+            "Add new snippet "
+            "(or override the one with the same name)"
+        ))
         add.add_argument("lang")
         add.add_argument("prefix")
         add.add_argument("-n", "--name", default=None)
         add.add_argument("-d", "--description", default="")
         add.add_argument("-s", "--skip-review", action="store_true")
-        subparsers.add_parser("init"
-            # , description=f"Make rcfile"
-        )
-        subparsers.add_parser("config"
-            # , description="Print config"
-        )
+        subparsers.add_parser("init", description=f"Make rcfile")
+        subparsers.add_parser("config", description="Print config")
         return self
 
 
