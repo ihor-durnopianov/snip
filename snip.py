@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A simple tool to help with snippets.
-
-Expects (not yet, but anyway) SNIPPETS_PATH to be a git repo.
-"""
+"""A simple tool to help with snippets."""
 
 
 import argparse
@@ -14,7 +11,7 @@ import json
 import os
 
 
-SNIPPETS_PATH = pathlib.Path("/home/ihor/.config/Code/User/snippets")
+CONFIG = pathlib.Path(os.environ["HOME"]) / ".sniprc"
 
 
 def main():
@@ -24,7 +21,18 @@ def main():
     if args.command is None:
         parser.print_help()
         return
-    _assemble_commands()[args.command](**vars(args))
+    config = _read_config()
+    if config is None and args.command != "init":
+        print(f"no {CONFIG} - run init first")
+        return
+    _assemble_commands()[args.command](**vars(args), config=config)
+
+
+def _read_config():
+    if not CONFIG.exists():
+        return None
+    with open(CONFIG) as file:
+        return argparse.Namespace(**json.load(file))
 
 
 class _Parser(argparse.ArgumentParser):
@@ -34,16 +42,24 @@ class _Parser(argparse.ArgumentParser):
 
     def specify_args(self):
         subparsers = self.add_subparsers(dest="command")
-        add = subparsers.add_parser("add")
+        # TODO: add command-level help
+        add = subparsers.add_parser("add"
+            # , description=(
+            #     "Add new snippet "
+            #     "(or override the one with the same name"
+            # )
+        )
         add.add_argument("lang")
         add.add_argument("prefix")
         add.add_argument("-n", "--name", default=None)
         add.add_argument("-d", "--description", default="")
         add.add_argument("-s", "--skip-review", action="store_true")
-        # add.add_argument(
-        #     "-e", "--edit-msg", help="help", action="store_true"
-        # )
-        # init = subparsers.add_parser("init")
+        subparsers.add_parser("init"
+            # , description=f"Make rcfile"
+        )
+        subparsers.add_parser("config"
+            # , description="Print config"
+        )
         return self
 
 
@@ -52,12 +68,29 @@ def _assemble_commands():
         name: globals()[f"_{name}"]
         for name in {
             "add",
+            "init",
+            "config",
         }
     }
 
 
-def _add(lang, prefix, name, description, skip_review, **kwargs):
-    dest = SNIPPETS_PATH / f"{lang}.json"
+def _config(config, **kwargs):
+    print(json.dumps(vars(config), indent=4))
+
+
+def _init(**kwargs):
+    if CONFIG.exists():
+        print(f"{CONFIG} exists, modify manually if needed")
+        return
+    config = dict(
+        snippets=input("specify VS Code snippets folder: ")
+    )
+    with open(CONFIG, "w") as file:
+        json.dump(config, file, indent=4)
+
+
+def _add(lang, prefix, name, description, skip_review, config, **kwargs):
+    dest = pathlib.Path(config.snippets) / f"{lang}.json"
     if not dest.exists():
         if input(f"{dest} does not exist.  Create? (y/n) ") != "y":
             print("not created, aborting...")
@@ -75,6 +108,7 @@ def _add(lang, prefix, name, description, skip_review, **kwargs):
             print("dismissing snippet due to emptied message")
             return
     _save_snippet(snippet, dest)
+    print(f"saved to {dest}")
 
 
 def _save_snippet(snippet, dest):
