@@ -92,9 +92,6 @@ def _add(lang, prefix, name, description, skip_review, config, **kwargs):
             return
         with open(dest, "w") as file:
             json.dump({}, file)
-    # TODO: make either config global
-    #       , or _add and co. be the methods of the class
-    # , s.t. one is not forced to pass editor as a function parameter
     snippet = _make_snippet(lang, prefix, name, description, config.editor)
     if snippet is None:
         print("dismissing empty snippet...")
