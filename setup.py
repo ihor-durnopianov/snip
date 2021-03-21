@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Simple setup script."""
+""""""
 
 
 from setuptools import setup
@@ -10,7 +10,7 @@ setup(
 
     version='0.0.1',  # Required
 
-    description='Simple tool to help with snippets',  # Optional
+    description='Tool to help with snippets',  # Optional
 
     py_modules=["snip"],  # Required
 
