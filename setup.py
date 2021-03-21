@@ -10,7 +10,7 @@ setup(
 
     version='0.0.1',  # Required
 
-    description='A simple tool to help with snippets',  # Optional
+    description='Simple tool to help with snippets',  # Optional
 
     py_modules=["snip"],  # Required
 

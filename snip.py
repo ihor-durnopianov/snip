@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A simple tool to help with snippets."""
+"""Simple tool to help with snippets."""
 
 
 import argparse
