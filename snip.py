@@ -53,7 +53,8 @@ class _Parser(argparse.ArgumentParser):
         add.add_argument("-d", "--description", default="")
         add.add_argument("-s", "--skip-review", action="store_true")
         subparsers.add_parser("init", description=f"Make rcfile")
-        subparsers.add_parser("config", description="Print config")
+        config = subparsers.add_parser("config", description="Print config")
+        config.add_argument("-k", "--key", default=None)
         return self
 
 
@@ -68,8 +69,12 @@ def _assemble_commands():
     }
 
 
-def _config(config, **kwargs):
-    print(json.dumps(vars(config), indent=4))
+def _config(config, key, **kwargs):
+    if key is None:
+        output = json.dumps(vars(config), indent=4)
+    else:
+        output = getattr(config, key)
+    print(output)
 
 
 def _init(**kwargs):
