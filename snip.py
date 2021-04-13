@@ -55,6 +55,11 @@ class _Parser(argparse.ArgumentParser):
         subparsers.add_parser("init", description=f"Make rcfile")
         config = subparsers.add_parser("config", description="Print config")
         config.add_argument("-k", "--key", default=None)
+        edit = subparsers.add_parser(
+            "edit", description="Edit existing snippet"
+        )
+        edit.add_argument("lang")
+        edit.add_argument("prefix")
         return self
 
 
@@ -65,8 +70,50 @@ def _assemble_commands():
             "add",
             "init",
             "config",
+            "edit",
         }
     }
+
+
+def _edit(lang, prefix, config, **kwargs):
+    dest = pathlib.Path(config.snippets) / f"{lang}.json"
+    if not dest.exists():
+        print(f"{dest} does not exist")
+        return
+    snippets = _load_snippets(dest)
+    name = next(
+        (
+            name for name, snippet in snippets.items()
+            if snippet["prefix"] == prefix
+        ),
+        None
+    )
+    if name is None:
+        print(f"no {prefix} in {dest}")
+        return
+    modified = _request_edit("\n".join(snippets[name]["body"]), config.editor)
+    if not modified:
+        print("body emptied, aborting")
+        return
+    snippets[name]["body"] = modified.splitlines()
+    with open(dest, "w") as file:
+        json.dump(snippets, file, indent=4)
+
+
+def _request_edit(body, editor):
+    _, name = tempfile.mkstemp()
+    with open(name, "w") as file:
+        file.write(body)
+    os.system(f"{editor} {name}")
+    with open(name) as file:
+        body = file.read()
+    os.unlink(name)
+    return body
+
+
+def _load_snippets(dest):
+    with open(dest) as file:
+        return json.load(file)
 
 
 def _config(config, key, **kwargs):
