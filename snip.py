@@ -116,7 +116,7 @@ def _save_snippet(snippet, dest):
     with open(dest) as file:
         snippets = json.load(file)
     with open(dest, "w") as file:
-        json.dump(snippets | snippet, file, indent=4)
+        json.dump({**snippets, **snippet}, file, indent=4)
 
 
 def _make_snippet(lang, prefix, name, description, editor):
