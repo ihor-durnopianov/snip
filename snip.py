@@ -60,6 +60,7 @@ class _Parser(argparse.ArgumentParser):
         )
         edit.add_argument("lang")
         edit.add_argument("prefix")
+        subparsers.add_parser("list", description=f"List snippets")
         return self
 
 
@@ -71,8 +72,24 @@ def _assemble_commands():
             "init",
             "config",
             "edit",
+            "list",
         }
     }
+
+
+def _list(config, **kwargs):
+    for file in sorted(
+        pathlib.Path(config.snippets).iterdir(),
+        key=lambda file: file.name
+    ):
+        if file.suffix != ".json":
+            continue
+        print(file.name)
+        for snippet_name, snippet in sorted(
+            _load_snippets(file).items(),
+            key=lambda item: item[1]["prefix"]
+        ):
+            print("\t%s - %s" % (snippet["prefix"], snippet_name))
 
 
 def _edit(lang, prefix, config, **kwargs):
